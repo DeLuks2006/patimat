@@ -1,0 +1,11 @@
+{
+  "target": "dummy.exe",
+  "output": "patched.exe",
+  "patches": [
+    {
+      "signature": "f0 ?? 4? (10-20) ?a",
+      "patch": "de ad be ef",
+      "padding": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "target": "finspy.exe",
+  "output": "patched.exe",
+  "patches": [
+    {
+      "signature": "0f 84 ?? ?? ?? ?? cc cc cc cc cc",
+      "patch": "90 e9",
+      "padding": false
+    },
+    {
+      "signature": "7? ?? 7? ??",
+      "patch": "eb",
+      "padding": false
+    },
+    {
+      "signature": "0f 8? ?? ?? ?? ?? 0f 8? ?? ?? ?? ??",
+      "patch": "90 e9",
+      "padding": false
+    }
+  ]
+}
