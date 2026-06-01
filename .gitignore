@@ -1,0 +1,8 @@
+patimat
+.out
+.exe
+.elf
+.bin
+.cache/*
+compile_commands.json
+.DS_Store

@@ -1,7 +1,7 @@
 CXX = clang++
 CXXFLAGS = -std=c++23 -I./include
 
-IN = src/*.cc
+IN = src/*.cpp
 OUT = patimat
 
 all:

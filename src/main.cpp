@@ -65,15 +65,12 @@ TargetConfig parse_args(int argc, char* argv[]) {
         };
     }
     print_help(argv[0]);
-    exit(-1); // should never be reached inshallah
+    exit(-1); // should never be reached inshallah (on a srs note, i should consider argparse)
 }
 
-// later use an argument to get the json file 
 int main(int argc, char* argv[]) {
-    // read config
     auto config = parse_args(argc, argv);
 
-    // here read file and extract .text section as a span
     auto bin_v = patimat::Binary::open(config.target);
     if (!bin_v.has_value())
         return -1;

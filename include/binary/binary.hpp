@@ -8,10 +8,10 @@
 #include <span>
 #include <expected>
 
-#include "elf.h"
-#include "macho.h"
-#include "pe.h"
-#include "raw.h"
+#include "elf.hpp"
+#include "macho.hpp"
+#include "pe.hpp"
+#include "raw.hpp"
 #include "format.hpp"
 
 namespace patimat {
