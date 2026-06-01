@@ -109,52 +109,52 @@ class Macho : public Format {
     uint64_t offset;
     uint64_t size;
 
-    bool find_section32(std::string_view name) {
+    template<size_t Bits>
+    struct macho_traits;
+
+    template<>
+    struct macho_traits<32> {
+        using segment_t = segment_command;
+        using section_t = section;
+        static constexpr uint32_t segment_cmd_id = LC_SEGMENT;
+    };
+
+    template<>
+    struct macho_traits<64> {
+        using segment_t = segment_command_64;
+        using section_t = section_64;
+        static constexpr uint32_t segment_cmd_id = LC_SEGMENT_64;
+    };
+
+    template <size_t Bits>
+    bool find_section(std::string_view name) {
+        using traits = macho_traits<Bits>;
+        using SegmentType = typename traits::segment_t;
+        using SectionType = typename traits::section_t;
+
+        const uint8_t* l_cmd_ptr = cmd_ptr;
         for (uint32_t i = 0; i < num_load_cmd; ++i) {
-            auto* load_cmd = reinterpret_cast<const load_command*>(cmd_ptr);
-            if (load_cmd->cmd == LC_SEGMENT) {
-                auto* segment = reinterpret_cast<const segment_command*>(cmd_ptr);
+            auto* load_cmd = reinterpret_cast<const load_command*>(l_cmd_ptr);
+            if (load_cmd->cmd == traits::segment_cmd_id) {
+                auto* segment = reinterpret_cast<const SegmentType*>(cmd_ptr);
                 if (std::string_view(segment->segname) == "__TEXT") {
-                    const uint8_t* sect_ptr = cmd_ptr + sizeof(segment_command);
+                    const uint8_t* sect_ptr = l_cmd_ptr + sizeof(SegmentType);
                     for (uint32_t j = 0; j < segment->nsect; ++j) {
-                        auto* sct = reinterpret_cast<const section*>(sect_ptr);
+                        auto* sct = reinterpret_cast<const SectionType*>(sect_ptr);
                         if (std::string_view(sct->sectname) == name) {
                             offset = sct->offset;
                             size = sct->size;
                             return true;
                         }
-                        sect_ptr += sizeof(section);
+                        sect_ptr += sizeof(SectionType);
                     }
                 }
             }
-            cmd_ptr += load_cmd->cmdsize;
+            l_cmd_ptr += load_cmd->cmdsize;
         }
         return false;
     }
 
-    bool find_section64(std::string_view name) {
-        for (uint32_t i = 0; i < num_load_cmd; ++i) {
-            auto* load_cmd = reinterpret_cast<const load_command*>(cmd_ptr);
-            if (load_cmd->cmd == LC_SEGMENT_64) {
-                auto* segment = reinterpret_cast<const segment_command_64*>(cmd_ptr);
-                if (std::string_view(segment->segname) == "__TEXT") {
-                    const uint8_t* sect_ptr = cmd_ptr + sizeof(segment_command_64);
-                    for (uint32_t j = 0; j < segment->nsect; ++j) {
-                        auto* sct = reinterpret_cast<const section_64*>(sect_ptr);
-                        if (std::string_view(sct->sectname) == name) {
-                            offset = sct->offset;
-                            size = sct->size;
-                            return true;
-                        }
-                        sect_ptr += sizeof(section_64);
-                    }
-                }
-            }
-            cmd_ptr += load_cmd->cmdsize;
-        }
-        return false;
-    }
-    
     public:
     Macho(std::span<uint8_t> raw_content) {
         _raw_content = raw_content;
@@ -181,9 +181,9 @@ class Macho : public Format {
             name = "__text";
         bool status = false;
         if (is_64bit) {
-            status = find_section64(name);
+            status = find_section<64>(name);
         } else {
-            status = find_section32(name);
+            status = find_section<32>(name);
         }
         if (!status)
             return std::unexpected(patimat::error::not_found);

@@ -74,7 +74,11 @@ int main(int argc, char* argv[]) {
     auto config = parse_args(argc, argv);
 
     // here read file and extract .text section as a span
-    auto bin = patimat::Binary(config.target);
+    auto bin_v = patimat::Binary::open(config.target);
+    if (!bin_v.has_value())
+        return -1;
+
+    auto& bin = bin_v.value();
 
     auto memory = bin.get_section();
     if (!memory.has_value()) {
