@@ -1,12 +1,13 @@
 #include <print>
 #include <vector>
 #include <fstream>
-#include "patimat.hpp"
+#include "cond_patimat.hpp"
 #include "json.hpp"
 #include "binary/binary.hpp"
 
 struct PatchConfig {
     std::string signature;
+    std::string condition;
     std::string patch;
     bool padding;
 };
@@ -17,7 +18,7 @@ struct TargetConfig {
     std::vector<PatchConfig> patches;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchConfig, signature, patch, padding)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchConfig, signature, condition, patch, padding)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TargetConfig, target, output, patches)
 
 std::expected<TargetConfig, int> read_config(std::string filename) {
@@ -61,7 +62,7 @@ TargetConfig parse_args(int argc, char* argv[]) {
         return {
             argv[1],
             "",
-            std::vector<PatchConfig>{ {argv[2], argv[3], false} }
+            std::vector<PatchConfig>{ {argv[2], "1=1",  argv[3], false} }
         };
     }
     print_help(argv[0]);
@@ -80,24 +81,29 @@ int main(int argc, char* argv[]) {
     auto memory = bin.get_section();
     if (!memory.has_value()) {
         std::println("Failed to find section");
+        return -1;
     }
 
-    auto pm = patimat::pattern_matcher(memory.value());
+    auto pm = patimat::cc_pattern_matcher(memory.value());
 
     int patched = 0;
-    
+
     // perform patches
     for (auto& patch : config.patches) {
         pm.set_pattern(patch.signature);
+        pm.set_patch(patch.patch);
+        pm.set_conditions(patch.condition);
         auto finds = pm.find_patterns();
         if (!finds.has_value())
             continue;
         patched += finds.value().size();
         pm.patch_all(finds.value(), patch.padding);
+        auto* p = finds.value()[0];
     }
-    
+
     // patch file here
-    bin.write_changes(config.output);
-    
+    bool res = bin.write_changes(config.output);
+    if (!res)
+        std::println("Failed to write changes");
     return 0;
 }

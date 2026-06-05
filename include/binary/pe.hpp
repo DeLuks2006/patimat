@@ -168,7 +168,7 @@ private:
         }
         return false;
     }
-    
+
 public:
     Pe(std::span<uint8_t> raw_content) {
         _raw_content = raw_content;

@@ -52,23 +52,23 @@ namespace patimat {
     };
 
     class pattern_matcher {
-    private:
+    protected:
         std::span<uint8_t> _memory;
         std::vector<ByteMatcher> _match_sig;
         std::vector<BytePatcher> _patch_sig;
 
-        uint8_t hex_char_to_val(char c) {
+        static uint8_t hex_char_to_val(char c) {
             if (c >= '0' && c <= '9') return c - '0';
             if (c >= 'a' && c <= 'f') return c - 'a' + 10;
             if (c >= 'A' && c <= 'F') return c - 'A' + 10;
             return 0;
         }
 
-        uint8_t hex_str_to_val(std::string_view sv) {
-                uint8_t val = 0;
-                std::from_chars(sv.data(), sv.data() + sv.size(), val, 16);
-                return val;
-            }
+        static uint8_t hex_str_to_val(std::string_view sv) {
+            uint8_t val = 0;
+            std::from_chars(sv.data(), sv.data() + sv.size(), val, 16);
+            return val;
+        }
 
         ByteMatcher parse_mat_token(std::string_view token) {
             if (token == "??" || token == "?") {
@@ -236,11 +236,12 @@ namespace patimat {
         }
 
         error patch(uint8_t* match, bool padding = false) {
-            if (_patch_sig.empty())
+            if (_patch_sig.empty()) {
                 return error::missing_patch;
-            if (_match_sig.empty())
+            }
+            if (_match_sig.empty()) {
                 return error::no_matches;
-
+            }
             auto copy = std::vector<uint8_t>(_patch_sig.size());
             std::memcpy(copy.data(), match, _patch_sig.size());
 
@@ -268,8 +269,9 @@ namespace patimat {
         }
 
         void patch_all(const std::vector<uint8_t*>& matches, bool padding = false) {
-            for (auto& match : matches)
+            for (auto& match : matches) {
                 patch(match, padding);
+            }
         }
     };
 }

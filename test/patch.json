@@ -4,16 +4,19 @@
   "patches": [
     {
       "signature": "0f 84 ?? ?? ?? ?? cc cc cc cc cc",
+      "condition": "1=1",
       "patch": "90 e9",
       "padding": false
     },
     {
       "signature": "7? ?? 7? ??",
+      "condition": "[0]^[2]=1 and [1]-2=[3]",
       "patch": "eb",
       "padding": false
     },
     {
       "signature": "0f 8? ?? ?? ?? ?? 0f 8? ?? ?? ?? ??",
+      "condition": "[1]^[7]=1 and [2]-6=[8]",
       "patch": "90 e9",
       "padding": false
     }

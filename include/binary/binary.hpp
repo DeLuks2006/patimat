@@ -18,11 +18,12 @@ namespace patimat {
     
     class Binary {
     private:
+        std::vector<uint8_t> _raw_content;
         enum class FileFormat {
             ELF, MACHO, PE, RAW
         };
         FileFormat _file_format;
-        std::vector<uint8_t> _raw_content;
+        
         std::unique_ptr<Format> _format;
         std::string _path;
 
@@ -51,6 +52,19 @@ namespace patimat {
         }
         
     public:
+        
+        Binary(Binary&& other) noexcept
+            : _file_format(other._file_format),
+              _raw_content(std::move(other._raw_content)),
+              _path(std::move(other._path))
+        {
+            switch (_file_format) {
+                case FileFormat::PE:    _format = std::make_unique<Pe>(_raw_content);    break;
+                case FileFormat::ELF:   _format = std::make_unique<Elf>(_raw_content);   break;
+                case FileFormat::MACHO: _format = std::make_unique<Macho>(_raw_content); break;
+                case FileFormat::RAW:   _format = std::make_unique<Raw>(_raw_content);   break;
+            }
+        }
         
         [[nodiscard]]
         static std::expected<Binary, patimat::error> open(std::string path) {
@@ -98,11 +112,12 @@ namespace patimat {
             
             std::ofstream out_file(path, std::ios::out | std::ios::binary); 
             if (!out_file.is_open()) return false;
-            
+
             out_file.write(reinterpret_cast<const char*>(_raw_content.data()), _raw_content.size());
             out_file.flush();
             if (!out_file)
                 return false;
+            
             return true;
         }
     };
